@@ -1,0 +1,163 @@
+ <html>
+<head>  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.1.1/redux.js"></script> 
+</head>
+<body>
+    <div id="subject"></div>
+    <div id="TOC"></div>
+    <div id="control"></div>
+    <div id="content"></div>
+    <script> 
+
+        function subject(){
+            document.querySelector('#subject').innerHTML = `
+            <header>
+                <h1>WEB</h1>
+                Hello, WEB!
+            </header>`
+        } 
+        function TOC(){
+            let state = store.getState();
+            let i = 0;
+            let liTags = '';
+            while(i<state.contents.length){
+                liTags = liTags + `
+                <li>
+                    <a onclick="
+                    event.preventDefault();//기본동작 막기(페이지 넘어가는)
+                    let action = {type: 'SELECT', id:${state.contents[i].id}} //type이름이나 두번째 프로퍼티는 자유롭게 설정 가능
+                    store.dispatch(action); // store에 dispacth를 이용하여 action을 넘겨준다
+                    " 
+                    href=${state.contents[i].id}>${state.contents[i].title}</a>
+                </li>`;
+                i = i+1;
+            }
+            document.querySelector('#TOC').innerHTML = ` 
+            <nav>
+                <ol>
+                    ${liTags}
+                </ol>
+            </nav>`
+        }
+        function control(){
+            document.querySelector('#control').innerHTML = ` 
+            <ul>
+                <li>
+                    <input type="button" onclick="
+                    store.dispatch({type: 'SET_MODE', mode:'create'}); 
+                    " value="Create" /> 
+                </li>
+                <li><input onclick="
+                    store.dispatch({type:'DELETE'});
+                    " type="button" value="Delete"></li>
+            </ul>
+            `
+        }
+        function onSubmit(inTitle, inDesc){
+            event.preventDefault();  
+            store.dispatch({
+            type:"CREATE",
+            title: inTitle,
+            desc: inDesc,
+            }) 
+        }
+        function content(){
+            let state = store.getState();
+            if(state.mode === 'create'){
+                return document.querySelector('#content').innerHTML = `
+                <article>
+                    <form 
+                    onsubmit="onSubmit(this.title.value, this.desc.value)">
+                        <p>
+                            <input type="text" name="title" placeholder="title"/>
+                        </p>
+                        <p>
+                            <textarea type="text" name="desc" placeholder="description"></textarea>
+                        </p>
+                        <p>
+                            <input type="submit" />
+                        </p>
+                    </form>
+                </article>
+                `
+            }else if(state.mode ==='read'){
+            let i = 0;
+            let contentTitle, contentDesc; 
+            while(i < state.contents.length){
+                if(state.contents[i].id === state.selected_id){
+                    contentTitle = state.contents[i].title;
+                    contentDesc = state.contents[i].desc;
+                    break;
+                }
+                i = i+1;
+            }
+            console.log('content', state)
+            document.querySelector('#content').innerHTML = ` 
+            <article>
+                <h2>${contentTitle}</h2>
+                ${contentDesc}
+            </article>
+            `
+        }else if(state.mode === 'welcome'){ 
+                document.querySelector('#content').innerHTML = ` 
+                <article>
+                    <h2>Wellcome!!</h2>
+                    Is Redux!!
+                </article>
+                `
+            }
+        }
+
+        function reducer(state, action){
+            console.log(state, action)
+            if(state === undefined){
+                return{
+                    max_id: 2,
+                    mode: 'welcome',
+                    selected_id: 1,
+                    contents:[
+                        {id:1, title: "HTML", desc:"HTML is..."},
+                        {id:2, title: "CSS", desc:"CSS is..."}
+                    ]
+                }
+            }
+
+
+            let newState;
+            if(action.type === 'SELECT'){
+                // 기존 state값에 selected_id값을 덮어 쓰고 newState에 덮어쓴다 
+                console.log('SELECT');
+                newState = Object.assign({}, state, {selected_id: action.id, mode:'read'});
+            }else if(action.type === "CREATE"){ // 데이터 추가
+                console.log('CREATE')
+                let newMaxId = state.max_id + 1;
+               let newContents = state.contents.concat();
+               newContents.push({id:newMaxId,  title: action.title, desc: action.desc}) 
+               newState = Object.assign({}, state, {max_id: newMaxId, contents:newContents, mode:"read", selected_id:newMaxId})
+            }else if(action.type === "SET_MODE"){ //create, read
+                newState = Object.assign({}, state, {mode: action.mode});
+            }else if(action.type === "DELETE"){
+                let newContents = []; 
+                console.log('DELETE')
+                for(let i = 0; i < state.contents.length; i++){
+                    if(state.contents[i].id !== state.selected_id){
+                        newContents.push(state.contents[i]);
+                        console.log('delete content', newContents);
+                    }
+                }
+                console.log('newContents', newContents);
+                newState = Object.assign({}, state, {contents: newContents, mode:"welcome"});
+            }
+            console.log( action,state, newState); 
+            return newState;
+        }
+        let store = Redux.createStore(reducer); 
+        store.subscribe(content);
+        store.subscribe(TOC);
+        subject();
+        TOC();
+        control();
+        content();
+    </script>
+</body>
+</html>

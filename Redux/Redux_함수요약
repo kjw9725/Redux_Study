@@ -1,0 +1,51 @@
+1. createStore(reducer)
+ - Redux 전체 상태를 관리하는 store를 생성
+ 매개변수: reducer함수(필수), 상태초기화함수(선택), 미들웨어(선택)
+ 리턴값: store 객체
+ ex) const store = createStore(reducer);
+
+2. reducer(state, action)
+ - action에 따라 상태(state)를 업데이트 하는 함수
+ 매개변수: state(현재상태), action(상태변경을 위한 정보가 포함된 객체)
+ 리턴값: 업데이트된 새로운 상태
+ 주의: 항상 새로운 상태 객체를 반환해야함, 기존상태를 변경하면 안됨 
+
+3. dispatch(action)
+ - store 상태를 변경할 수 있도록 action객체를 전달
+ 매개변수: action객체(일반적으로 type속성과 추가적인 데이터 포함)
+ ex) store.dispatch({ type: 'INCREMENT' }); //type값을 전달(뒤에 데이터를 추가로 전달 가능)
+
+ 4. getState()
+  - 현재 store에 저장된 상태를 반환
+  리턴값: 현재 상태(state)
+  ex) const currentState = store.getState();
+
+5. subscribe(listener)
+ - 상태가 변경될 때마다 호출될 함수(listener)를 등록
+ 매개변수: listerner(함수)
+ 리턴값: 구독을 해제 할수 있는 함수
+ ex)
+ const unsubscribe = store.subscribe(() => console.log(store.getState()));
+ // 나중에 구독 해제
+ unsubscribe();
+
+6. combineReducers(reducers)
+ - 여러개의 reducer를 하나로 결함하여 전체 상태 관리
+ 매개변수: reducers객체(각 상태 키에  해당하는 reducer함수들을 포함)
+ 리턴값: 결합된 reducer 함수
+ ex)
+ const rootReducer = combineReducers({
+    user: userReducer,
+    posts: postsReducer
+});
+const store = createStore(rootReducer);
+
+6. applyMiddleware(...middlewares)
+ - Redux store에서 미들웨어를 사용하여 dispatch과정을 확장
+ 매개변수: 미들웨어 함수들
+ ex)
+ const store = createStore(
+    reducer,
+    applyMiddleware(thunk, logger)
+);
+
